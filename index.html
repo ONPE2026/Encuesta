@@ -1,0 +1,683 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <base target="_top" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <title>Encuesta EG 2026 - ONPE</title>
+
+    <style>
+      :root {
+        --onpe-azul: #003366;
+        --onpe-azul-claro: #e6ecf7;
+      }
+
+      body {
+        font-family: Arial, sans-serif;
+        padding: 20px;
+        max-width: 800px;
+        margin: 0 auto;
+        line-height: 1.4;
+        background-color: #f5f7fb;
+      }
+
+      h1 {
+        margin-bottom: 5px;
+        color: var(--onpe-azul);
+        text-align: center;
+      }
+
+      h2 {
+        margin-bottom: 5px;
+      }
+
+      fieldset {
+        margin-top: 15px;
+        padding: 15px;
+        border-radius: 5px;
+        border: 1px solid var(--onpe-azul-claro);
+        background-color: #ffffff;
+      }
+
+      legend {
+        font-weight: bold;
+        color: var(--onpe-azul);
+      }
+
+      label {
+        display: block;
+        margin-top: 8px;
+      }
+
+      .inline-label {
+        display: inline-block;
+        margin-right: 15px;
+      }
+
+      .grupo-etario label {
+        display: block;
+        margin-top: 4px;
+      }
+
+      select,
+      input[type="text"],
+      button {
+        padding: 5px;
+        margin-top: 5px;
+        min-width: 200px;
+      }
+
+      .seccion-oculta {
+        display: none;
+      }
+
+      .boton {
+        margin-top: 20px;
+        padding: 10px 18px;
+        font-size: 1rem;
+        cursor: pointer;
+        background-color: var(--onpe-azul);
+        color: #ffffff;
+        border: none;
+        border-radius: 4px;
+      }
+
+      .boton:hover {
+        opacity: 0.9;
+      }
+
+      .mensaje {
+        margin-top: 15px;
+        font-weight: bold;
+        color: var(--onpe-azul);
+      }
+
+      .banner {
+        max-width: 100%;
+        height: auto;
+        margin: 10px auto 20px auto;
+        display: block;
+      }
+
+      /* 📱 Ajustes para celular */
+      @media (max-width: 600px) {
+        body {
+          padding: 10px;
+          font-size: 15px;
+        }
+
+        fieldset {
+          padding: 12px;
+        }
+
+        select,
+        input[type="text"],
+        button {
+          width: 100%;
+          min-width: 0;
+          box-sizing: border-box;
+        }
+
+        .inline-label {
+          display: block;
+          margin-right: 0;
+          margin-top: 6px;
+        }
+
+        .grupo-etario label {
+          margin-top: 6px;
+        }
+      }
+    </style>
+  </head>
+
+  <body>
+    <h1>Encuesta sobre campañas - ONPE</h1>
+
+    <!-- Banner opcional
+    <img src="URL_DE_TU_BANNER" alt="Banner ONPE" class="banner">
+    -->
+
+    <p>Por favor, responda las siguientes preguntas.</p>
+
+    <!-- ==========================
+         DATOS GENERALES
+         ========================== -->
+    <fieldset>
+      <legend>Datos generales</legend>
+
+      <!-- Grupo etario -->
+      <label>1. Indique su grupo etario</label>
+      <div class="grupo-etario">
+        <label>
+          <input type="radio" name="grupoEtario" value="18-29" />
+          De 18 a 29 años
+        </label>
+        <label>
+          <input type="radio" name="grupoEtario" value="30-44" />
+          De 30 a 44 años
+        </label>
+        <label>
+          <input type="radio" name="grupoEtario" value="45-59" />
+          De 45 a 59 años
+        </label>
+        <label>
+          <input type="radio" name="grupoEtario" value="60+" />
+          De 60 a más
+        </label>
+      </div>
+
+      <h2>Lugar de residencia</h2>
+
+      <label for="region">2. Indique su región de residencia</label>
+      <select id="region">
+        <option value="">-- Seleccione región --</option>
+      </select>
+
+      <label for="provincia">3. Indique su provincia de residencia</label>
+      <select id="provincia" disabled>
+        <option value="">-- Seleccione provincia --</option>
+      </select>
+
+      <label for="distrito">4. Indique su distrito de residencia</label>
+      <select id="distrito" disabled>
+        <option value="">-- Seleccione distrito --</option>
+      </select>
+
+      <!-- Ubigeo se calcula y se envía, pero no se muestra -->
+    </fieldset>
+
+    <!-- ==========================
+         PUBLICIDAD ONPE
+         ========================== -->
+    <fieldset>
+      <legend>Sobre la publicidad de la ONPE</legend>
+
+      <label>5. ¿Ha visto publicidad de la ONPE sobre las Elecciones Generales?</label>
+      <label class="inline-label">
+        <input type="radio" name="publicidadONPE" value="Sí" /> Sí
+      </label>
+      <label class="inline-label">
+        <input type="radio" name="publicidadONPE" value="No" /> No
+      </label>
+
+      <div id="seccionMediosPublicidad" class="seccion-oculta">
+        <label>6. ¿A través de qué medios?</label>
+        <label>
+          <input type="checkbox" name="mediosPublicidadONPE" value="Carteles" />
+          Carteles
+        </label>
+        <label>
+          <input type="checkbox" name="mediosPublicidadONPE" value="Centros comerciales" />
+          Centros comerciales
+        </label>
+        <label>
+          <input type="checkbox" name="mediosPublicidadONPE" value="TV" />
+          TV
+        </label>
+        <label>
+          <input type="checkbox" name="mediosPublicidadONPE" value="Radio" />
+          Radio
+        </label>
+        <label>
+          <input type="checkbox" name="mediosPublicidadONPE" value="Correo electrónico" />
+          Correo electrónico
+        </label>
+        <label>
+          <input
+            type="checkbox"
+            name="mediosPublicidadONPE"
+            value="En persona (espacios públicos)"
+          />
+          En persona (espacios públicos)
+        </label>
+        <label>
+          <input type="checkbox" name="mediosPublicidadONPE" value="Redes sociales" />
+          Redes sociales
+        </label>
+      </div>
+
+      <label>
+        7. En una escala del 1 al 5, donde 1 es “Nada claro” y 5 es “Muy claro”,
+        ¿qué tan claro le resultó el mensaje de las campañas publicitarias de la ONPE?
+      </label>
+      <label class="inline-label">
+        <input type="radio" name="claridadONPE" value="1" /> 1 – Nada claro
+      </label>
+      <label class="inline-label">
+        <input type="radio" name="claridadONPE" value="2" /> 2 – Poco claro
+      </label>
+      <label class="inline-label">
+        <input type="radio" name="claridadONPE" value="3" /> 3 – Ni claro ni confuso
+      </label>
+      <label class="inline-label">
+        <input type="radio" name="claridadONPE" value="4" /> 4 – Algo claro
+      </label>
+      <label class="inline-label">
+        <input type="radio" name="claridadONPE" value="5" /> 5 – Muy claro
+      </label>
+    </fieldset>
+
+    <!-- ==========================
+         SECCIÓN ETLV
+         ========================== -->
+    <fieldset>
+      <legend>Sobre el local de votación y la plataforma “Elige tu Local de Votación”</legend>
+
+      <label>8. ¿Sabe que pudo elegir su local de votación?</label>
+      <label class="inline-label">
+        <input type="radio" name="sabePuedeElegirLocal" value="Sí" /> Sí
+      </label>
+      <label class="inline-label">
+        <input type="radio" name="sabePuedeElegirLocal" value="No" /> No
+      </label>
+
+      <label>9. ¿Supo de la plataforma “Elige tu Local de Votación” (ETLV)?</label>
+      <label class="inline-label">
+        <input type="radio" name="supoETLV" value="Sí" /> Sí
+      </label>
+      <label class="inline-label">
+        <input type="radio" name="supoETLV" value="No" /> No
+      </label>
+
+      <div id="seccionETLV" class="seccion-oculta">
+        <label>10. ¿Ingresó a la plataforma “Elige tu Local de Votación”?</label>
+        <label class="inline-label">
+          <input type="radio" name="haAccedidoETLV" value="Sí" /> Sí
+        </label>
+        <label class="inline-label">
+          <input type="radio" name="haAccedidoETLV" value="No" /> No
+        </label>
+
+        <div id="seccionAccesoETLV" class="seccion-oculta">
+          <label>11. ¿Pudo elegir su local de votación exitosamente?</label>
+          <label class="inline-label">
+            <input type="radio" name="haCambiadoLocal" value="Sí" /> Sí
+          </label>
+          <label class="inline-label">
+            <input type="radio" name="haCambiadoLocal" value="No" /> No
+          </label>
+
+          <label>
+            12. Al usar la plataforma “Elige tu Local de Votación”, ¿experimentó alguno de
+            los siguientes problemas? (puede marcar más de una opción)
+          </label>
+          <label>
+            <input
+              type="checkbox"
+              name="problemasETLV"
+              value="Problemas para ingresar a la plataforma"
+            />
+            Problemas para ingresar a la plataforma
+          </label>
+          <label>
+            <input
+              type="checkbox"
+              name="problemasETLV"
+              value="Problemas con las preguntas personales"
+            />
+            Problemas con las preguntas personales
+          </label>
+          <label>
+            <input
+              type="checkbox"
+              name="problemasETLV"
+              value="Problemas con el reconocimiento facial"
+            />
+            Problemas con el reconocimiento facial
+          </label>
+          <label>
+            <input
+              type="checkbox"
+              name="problemasETLV"
+              value="Problemas con la toma de foto de DNI"
+            />
+            Problemas con la toma de foto de DNI
+          </label>
+          <label>
+            <input
+              type="checkbox"
+              name="problemasETLV"
+              value="Problemas con el correo electrónico"
+            />
+            Problemas con el correo electrónico
+          </label>
+          <label>
+            <input
+              type="checkbox"
+              name="problemasETLV"
+              value="Problemas al ubicar el local de votación"
+            />
+            Problemas al ubicar el local de votación
+          </label>
+          <label>
+            <input type="checkbox" name="problemasETLV" value="Bloqueo de cuenta" />
+            Bloqueo de cuenta
+          </label>
+          <label>
+            <input type="checkbox" name="problemasETLV" value="No tuve problemas" />
+            No tuve problemas
+          </label>
+        </div>
+      </div>
+    </fieldset>
+
+    <button id="btnEnviar" class="boton">Enviar</button>
+    <div id="mensaje" class="mensaje"></div>
+
+    <script>
+      // 👉 Pon aquí la URL de TU Web App de Apps Script (la que termina en /exec)
+      const API_URL =
+        'https://script.google.com/macros/s/AKfycbwHIwj1q9hVWQA9nTA5p9BjDb9a7wZRYxeF0D0lAEoQVFvziyfEx49TmuEk8NpbeUDJ_g/exec';
+
+      // Nombres de archivos JSON por región en /ubigeo/
+      const REGIONES = [
+        'AMAZONAS',
+        'ANCASH',
+        'APURIMAC',
+        'AREQUIPA',
+        'AYACUCHO',
+        'CAJAMARCA',
+        'CALLAO',
+        'CUSCO',
+        'HUANCAVELICA',
+        'HUANUCO',
+        'ICA',
+        'JUNIN',
+        'LA LIBERTAD',
+        'LAMBAYEQUE',
+        'LIMA',
+        'LORETO',
+        'MADRE DE DIOS',
+        'MOQUEGUA',
+        'PASCO',
+        'PIURA',
+        'PUNO',
+        'SAN MARTIN',
+        'TACNA',
+        'TUMBES',
+        'UCAYALI'
+      ];
+
+      const ubigeoRegionCache = {};
+      let distritosActuales = {};
+
+      window.onload = function () {
+        cargarRegiones();
+        configurarEventosLogica();
+      };
+
+      function cargarRegiones() {
+        const regionSelect = document.getElementById('region');
+        regionSelect.innerHTML = '<option value="">-- Seleccione región --</option>';
+
+        REGIONES.forEach((region) => {
+          const opt = document.createElement('option');
+          opt.value = region;
+          opt.textContent = region;
+          regionSelect.appendChild(opt);
+        });
+      }
+
+      function cargarProvincias(region) {
+        const provinciaSelect = document.getElementById('provincia');
+        const distritoSelect = document.getElementById('distrito');
+
+        provinciaSelect.innerHTML = '<option value="">-- Seleccione provincia --</option>';
+        distritoSelect.innerHTML = '<option value="">-- Seleccione distrito --</option>';
+
+        provinciaSelect.disabled = !region;
+        distritoSelect.disabled = true;
+        distritosActuales = {};
+
+        if (!region) return;
+
+        if (ubigeoRegionCache[region]) {
+          popularProvincias(region);
+          return;
+        }
+
+        const url = 'ubigeo/' + encodeURIComponent(region) + '.json';
+
+        fetch(url)
+          .then((r) => {
+            if (!r.ok) throw new Error('No se pudo cargar ' + url);
+            return r.json();
+          })
+          .then((data) => {
+            ubigeoRegionCache[region] = data;
+            popularProvincias(region);
+          })
+          .catch((err) => {
+            console.error('Error cargando JSON de región:', region, err);
+            alert('Ocurrió un problema al cargar los datos de ubicación. Intente nuevamente.');
+          });
+      }
+
+      function popularProvincias(region) {
+        const provinciaSelect = document.getElementById('provincia');
+        const dataRegion = ubigeoRegionCache[region] || {};
+
+        provinciaSelect.innerHTML = '<option value="">-- Seleccione provincia --</option>';
+
+        const provincias = Object.keys(dataRegion).sort((a, b) => a.localeCompare(b, 'es'));
+
+        provincias.forEach((prov) => {
+          const opt = document.createElement('option');
+          opt.value = prov;
+          opt.textContent = prov;
+          provinciaSelect.appendChild(opt);
+        });
+      }
+
+      function cargarDistritos(region, provincia) {
+        const distritoSelect = document.getElementById('distrito');
+        distritoSelect.innerHTML = '<option value="">-- Seleccione distrito --</option>';
+
+        distritoSelect.disabled = !(region && provincia);
+        distritosActuales = {};
+
+        if (!region || !provincia) return;
+
+        const dataRegion = ubigeoRegionCache[region] || {};
+        const dataProvincia = dataRegion[provincia] || {};
+
+        distritosActuales = dataProvincia;
+
+        const distritos = Object.keys(dataProvincia).sort((a, b) =>
+          a.localeCompare(b, 'es')
+        );
+
+        distritos.forEach((dist) => {
+          const opt = document.createElement('option');
+          opt.value = dist;
+          opt.textContent = dist;
+          distritoSelect.appendChild(opt);
+        });
+      }
+
+      function configurarEventosLogica() {
+        document.getElementById('region').addEventListener('change', function () {
+          const region = this.value;
+          cargarProvincias(region);
+        });
+
+        document.getElementById('provincia').addEventListener('change', function () {
+          const region = document.getElementById('region').value;
+          const provincia = this.value;
+          cargarDistritos(region, provincia);
+        });
+
+        const radiosPublicidad = document.getElementsByName('publicidadONPE');
+        Array.from(radiosPublicidad).forEach((r) => {
+          r.addEventListener('change', function () {
+            const seccion = document.getElementById('seccionMediosPublicidad');
+            if (this.value === 'Sí') {
+              seccion.style.display = 'block';
+            } else {
+              seccion.style.display = 'none';
+              document
+                .querySelectorAll('input[name="mediosPublicidadONPE"]:checked')
+                .forEach((ch) => (ch.checked = false));
+            }
+          });
+        });
+
+        const radiosSupoETLV = document.getElementsByName('supoETLV');
+        Array.from(radiosSupoETLV).forEach((r) => {
+          r.addEventListener('change', function () {
+            const seccion = document.getElementById('seccionETLV');
+            const seccionAcceso = document.getElementById('seccionAccesoETLV');
+            if (this.value === 'Sí') {
+              seccion.style.display = 'block';
+            } else {
+              seccion.style.display = 'none';
+              seccionAcceso.style.display = 'none';
+              document
+                .querySelectorAll(
+                  'input[name="haAccedidoETLV"]:checked, input[name="haCambiadoLocal"]:checked, input[name="problemasETLV"]:checked'
+                )
+                .forEach((el) => (el.checked = false));
+            }
+          });
+        });
+
+        const radiosHaAccedido = document.getElementsByName('haAccedidoETLV');
+        Array.from(radiosHaAccedido).forEach((r) => {
+          r.addEventListener('change', function () {
+            const seccionAcceso = document.getElementById('seccionAccesoETLV');
+            if (this.value === 'Sí') {
+              seccionAcceso.style.display = 'block';
+            } else {
+              seccionAcceso.style.display = 'none';
+              document
+                .querySelectorAll(
+                  'input[name="haCambiadoLocal"]:checked, input[name="problemasETLV"]:checked'
+                )
+                .forEach((el) => (el.checked = false));
+            }
+          });
+        });
+
+        document.getElementById('btnEnviar').addEventListener('click', enviarFormulario);
+      }
+
+      function obtenerValorRadio(nombre) {
+        const seleccionado = document.querySelector(`input[name="${nombre}"]:checked`);
+        return seleccionado ? seleccionado.value : '';
+      }
+
+      function enviarFormulario() {
+        const mensajeDiv = document.getElementById('mensaje');
+        mensajeDiv.textContent = '';
+
+        const grupoEtario = obtenerValorRadio('grupoEtario');
+        const region = document.getElementById('region').value;
+        const provincia = document.getElementById('provincia').value;
+        const distrito = document.getElementById('distrito').value;
+
+        let ubigeo = '-';
+        if (distrito && distritosActuales[distrito]) {
+          ubigeo = distritosActuales[distrito];
+        }
+
+        const publicidadONPE = obtenerValorRadio('publicidadONPE');
+        const mediosPublicidadONPE = Array.from(
+          document.querySelectorAll('input[name="mediosPublicidadONPE"]:checked')
+        ).map((ch) => ch.value);
+
+        const claridadONPE = obtenerValorRadio('claridadONPE');
+        const sabePuedeElegirLocal = obtenerValorRadio('sabePuedeElegirLocal');
+        const supoETLV = obtenerValorRadio('supoETLV');
+        const haAccedidoETLV = obtenerValorRadio('haAccedidoETLV');
+        const haCambiadoLocal = obtenerValorRadio('haCambiadoLocal');
+        const problemasETLV = Array.from(
+          document.querySelectorAll('input[name="problemasETLV"]:checked')
+        ).map((ch) => ch.value);
+
+        if (!grupoEtario) {
+          alert('Por favor, indique su grupo etario.');
+          return;
+        }
+        if (!region || !provincia || !distrito || ubigeo === '-') {
+          alert('Por favor, complete región, provincia y distrito válidos.');
+          return;
+        }
+        if (!publicidadONPE) {
+          alert('Por favor, responda la pregunta sobre publicidad de la ONPE (pregunta 5).');
+          return;
+        }
+        if (publicidadONPE === 'Sí' && mediosPublicidadONPE.length === 0) {
+          alert('Por favor, indique a través de qué medios vio la publicidad (pregunta 6).');
+          return;
+        }
+        if (!claridadONPE) {
+          alert('Por favor, responda la pregunta sobre claridad de las campañas (pregunta 7).');
+          return;
+        }
+        if (!sabePuedeElegirLocal) {
+          alert('Por favor, responda la pregunta 8.');
+          return;
+        }
+        if (!supoETLV) {
+          alert('Por favor, responda la pregunta 9.');
+          return;
+        }
+        if (supoETLV === 'Sí' && !haAccedidoETLV) {
+          alert('Por favor, responda la pregunta 10 sobre si ingresó a la plataforma.');
+          return;
+        }
+        if (supoETLV === 'Sí' && haAccedidoETLV === 'Sí' && !haCambiadoLocal) {
+          alert('Por favor, responda la pregunta 11 sobre si pudo elegir su local exitosamente.');
+          return;
+        }
+        if (supoETLV === 'Sí' && haAccedidoETLV === 'Sí' && problemasETLV.length === 0) {
+          alert(
+            'Por favor, indique si tuvo algún problema al usar la plataforma (pregunta 12).'
+          );
+          return;
+        }
+
+        const formData = {
+          grupoEtario,
+          region,
+          provincia,
+          distrito,
+          ubigeo,
+          publicidadONPE,
+          mediosPublicidadONPE,
+          claridadONPE,
+          sabePuedeElegirLocal,
+          supoETLV,
+          haAccedidoETLV,
+          haCambiadoLocal,
+          problemasETLV
+        };
+
+        document.getElementById('btnEnviar').disabled = true;
+
+        fetch(API_URL, {
+          method: 'POST',
+          mode: 'no-cors',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(formData)
+        })
+          .then(() => {
+            document.body.innerHTML = `
+              <div style="max-width:800px;margin:40px auto;font-family:Arial,sans-serif;text-align:center;">
+                <h1 style="color:#003366;">Registro completado</h1>
+                <p>Se ha realizado el registro correctamente. Muchas gracias por su participación.</p>
+              </div>
+            `;
+          })
+          .catch((err) => {
+            console.error(err);
+            mensajeDiv.textContent =
+              'Ocurrió un error al enviar la respuesta. Intente nuevamente.';
+            document.getElementById('btnEnviar').disabled = false;
+          });
+      }
+    </script>
+  </body>
+</html>
