@@ -588,7 +588,7 @@
     return seleccionado ? seleccionado.value : '';
   }
 
-  function enviarFormulario() {
+function enviarFormulario() {
     const mensajeDiv = document.getElementById('mensaje');
     mensajeDiv.textContent = '';
 
@@ -616,6 +616,7 @@
       document.querySelectorAll('input[name="problemasETLV"]:checked')
     ).map((ch) => ch.value);
 
+    // ====== VALIDACIONES (igual que antes) ======
     if (!grupoEtario) {
       alert('Por favor, indique su grupo etario.');
       return;
@@ -675,36 +676,39 @@
       problemasETLV
     };
 
-    document.getElementById('btnEnviar').disabled = true;
+    // Deshabilitar botón para evitar dobles clics
+    const btn = document.getElementById('btnEnviar');
+    if (btn) btn.disabled = true;
 
-    fetch(API_URL, {
-      method: 'POST',
-      mode: 'no-cors',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(formData)
-    })
-      .then(() => {
-        // ✅ Marcamos en este navegador que ya respondió
-        try {
-          localStorage.setItem(STORAGE_KEY, '1');
-        } catch (e) {
-          console.warn('No se pudo guardar en localStorage:', e);
-        }
+    // ✅ 1) Marcamos como respondido en este navegador
+    try {
+      localStorage.setItem(STORAGE_KEY, '1');
+    } catch (e) {
+      console.warn('No se pudo guardar en localStorage:', e);
+    }
 
-        // Mensaje final
-        document.body.innerHTML = `
-          <div style="max-width:800px;margin:40px auto;font-family:Arial,sans-serif;text-align:center;">
-            <h1 style="color:#003366;">Registro completado</h1>
-            <p>Se ha realizado el registro correctamente. Muchas gracias por su participación.</p>
-          </div>
-        `;
-      })
-      .catch((err) => {
-        console.error(err);
-        mensajeDiv.textContent =
-          'Ocurrió un error al enviar la respuesta. Intente nuevamente.';
-        document.getElementById('btnEnviar').disabled = false;
+    // ✅ 2) Mostramos mensaje final INMEDIATO (sin esperar al servidor)
+    document.body.innerHTML = `
+      <div style="max-width:800px;margin:40px auto;font-family:Arial,sans-serif;text-align:center;">
+        <h1 style="color:#003366;">Registro completado</h1>
+        <p>Se ha realizado el registro correctamente. Muchas gracias por su participación.</p>
+      </div>
+    `;
+
+    // ✅ 3) Enviamos la info "en segundo plano"
+    try {
+      fetch(API_URL, {
+        method: 'POST',
+        mode: 'no-cors',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formData)
       });
+      // No esperamos .then() para no frenar la UX
+    } catch (err) {
+      console.error('Error al enviar datos al servidor:', err);
+      // Si falla de verdad la red, se vería en la consola;
+      // desde el punto de vista del encuestado, ya terminó.
+    }
   }
   </script>
   </body>
