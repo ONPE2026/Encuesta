@@ -371,313 +371,341 @@
       const API_URL =
         'https://script.google.com/macros/s/AKfycbwHIwj1q9hVWQA9nTA5p9BjDb9a7wZRYxeF0D0lAEoQVFvziyfEx49TmuEk8NpbeUDJ_g/exec';
 
-      // Nombres de archivos JSON por región en /ubigeo/
-      const REGIONES = [
-        'AMAZONAS',
-        'ANCASH',
-        'APURIMAC',
-        'AREQUIPA',
-        'AYACUCHO',
-        'CAJAMARCA',
-        'CALLAO',
-        'CUSCO',
-        'HUANCAVELICA',
-        'HUANUCO',
-        'ICA',
-        'JUNIN',
-        'LA LIBERTAD',
-        'LAMBAYEQUE',
-        'LIMA',
-        'LORETO',
-        'MADRE DE DIOS',
-        'MOQUEGUA',
-        'PASCO',
-        'PIURA',
-        'PUNO',
-        'SAN MARTIN',
-        'TACNA',
-        'TUMBES',
-        'UCAYALI'
-      ];
+  // Nombres de archivos JSON por región en /ubigeo/
+  const REGIONES = [
+    'AMAZONAS',
+    'ANCASH',
+    'APURIMAC',
+    'AREQUIPA',
+    'AYACUCHO',
+    'CAJAMARCA',
+    'CALLAO',
+    'CUSCO',
+    'HUANCAVELICA',
+    'HUANUCO',
+    'ICA',
+    'JUNIN',
+    'LA LIBERTAD',
+    'LAMBAYEQUE',
+    'LIMA',
+    'LORETO',
+    'MADRE DE DIOS',
+    'MOQUEGUA',
+    'PASCO',
+    'PIURA',
+    'PUNO',
+    'SAN MARTIN',
+    'TACNA',
+    'TUMBES',
+    'UCAYALI'
+  ];
 
-      const ubigeoRegionCache = {};
-      let distritosActuales = {};
+  const ubigeoRegionCache = {};
+  let distritosActuales = {};
 
-      window.onload = function () {
-        cargarRegiones();
-        configurarEventosLogica();
-      };
+  // 🔑 Clave en localStorage para marcar que ya respondió
+  const STORAGE_KEY = 'encuesta_eg2026_respondida';
 
-      function cargarRegiones() {
-        const regionSelect = document.getElementById('region');
-        regionSelect.innerHTML = '<option value="">-- Seleccione región --</option>';
-
-        REGIONES.forEach((region) => {
-          const opt = document.createElement('option');
-          opt.value = region;
-          opt.textContent = region;
-          regionSelect.appendChild(opt);
-        });
+  window.onload = function () {
+    // ✅ Si ya respondió en este navegador, solo mostramos el mensaje final
+    try {
+      if (localStorage.getItem(STORAGE_KEY) === '1') {
+        document.body.innerHTML = `
+          <div style="max-width:800px;margin:40px auto;font-family:Arial,sans-serif;text-align:center;">
+            <h1 style="color:#003366;">Registro ya realizado</h1>
+            <p>Ya se ha registrado una respuesta desde este navegador. Muchas gracias por su participación.</p>
+          </div>
+        `;
+        return; // No cargamos el formulario ni eventos
       }
+    } catch (e) {
+      console.warn('No se pudo acceder a localStorage:', e);
+      // Si falla localStorage, seguimos normal (sin bloqueo)
+    }
 
-      function cargarProvincias(region) {
-        const provinciaSelect = document.getElementById('provincia');
-        const distritoSelect = document.getElementById('distrito');
+    // Si NO ha respondido, cargamos formulario normalmente
+    cargarRegiones();
+    configurarEventosLogica();
+  };
 
-        provinciaSelect.innerHTML = '<option value="">-- Seleccione provincia --</option>';
-        distritoSelect.innerHTML = '<option value="">-- Seleccione distrito --</option>';
+  function cargarRegiones() {
+    const regionSelect = document.getElementById('region');
+    regionSelect.innerHTML = '<option value="">-- Seleccione región --</option>';
 
-        provinciaSelect.disabled = !region;
-        distritoSelect.disabled = true;
-        distritosActuales = {};
+    REGIONES.forEach((region) => {
+      const opt = document.createElement('option');
+      opt.value = region;
+      opt.textContent = region;
+      regionSelect.appendChild(opt);
+    });
+  }
 
-        if (!region) return;
+  function cargarProvincias(region) {
+    const provinciaSelect = document.getElementById('provincia');
+    const distritoSelect = document.getElementById('distrito');
 
-        if (ubigeoRegionCache[region]) {
-          popularProvincias(region);
-          return;
+    provinciaSelect.innerHTML = '<option value="">-- Seleccione provincia --</option>';
+    distritoSelect.innerHTML = '<option value="">-- Seleccione distrito --</option>';
+
+    provinciaSelect.disabled = !region;
+    distritoSelect.disabled = true;
+    distritosActuales = {};
+
+    if (!region) return;
+
+    if (ubigeoRegionCache[region]) {
+      popularProvincias(region);
+      return;
+    }
+
+    const url = 'ubigeo/' + encodeURIComponent(region) + '.json';
+
+    fetch(url)
+      .then((r) => {
+        if (!r.ok) throw new Error('No se pudo cargar ' + url);
+        return r.json();
+      })
+      .then((data) => {
+        ubigeoRegionCache[region] = data;
+        popularProvincias(region);
+      })
+      .catch((err) => {
+        console.error('Error cargando JSON de región:', region, err);
+        alert('Ocurrió un problema al cargar los datos de ubicación. Intente nuevamente.');
+      });
+  }
+
+  function popularProvincias(region) {
+    const provinciaSelect = document.getElementById('provincia');
+    const dataRegion = ubigeoRegionCache[region] || {};
+
+    provinciaSelect.innerHTML = '<option value="">-- Seleccione provincia --</option>';
+
+    const provincias = Object.keys(dataRegion).sort((a, b) => a.localeCompare(b, 'es'));
+
+    provincias.forEach((prov) => {
+      const opt = document.createElement('option');
+      opt.value = prov;
+      opt.textContent = prov;
+      provinciaSelect.appendChild(opt);
+    });
+  }
+
+  function cargarDistritos(region, provincia) {
+    const distritoSelect = document.getElementById('distrito');
+    distritoSelect.innerHTML = '<option value="">-- Seleccione distrito --</option>';
+
+    distritoSelect.disabled = !(region && provincia);
+    distritosActuales = {};
+
+    if (!region || !provincia) return;
+
+    const dataRegion = ubigeoRegionCache[region] || {};
+    const dataProvincia = dataRegion[provincia] || {};
+
+    distritosActuales = dataProvincia;
+
+    const distritos = Object.keys(dataProvincia).sort((a, b) =>
+      a.localeCompare(b, 'es')
+    );
+
+    distritos.forEach((dist) => {
+      const opt = document.createElement('option');
+      opt.value = dist;
+      opt.textContent = dist;
+      distritoSelect.appendChild(opt);
+    });
+  }
+
+  function configurarEventosLogica() {
+    document.getElementById('region').addEventListener('change', function () {
+      const region = this.value;
+      cargarProvincias(region);
+    });
+
+    document.getElementById('provincia').addEventListener('change', function () {
+      const region = document.getElementById('region').value;
+      const provincia = this.value;
+      cargarDistritos(region, provincia);
+    });
+
+    const radiosPublicidad = document.getElementsByName('publicidadONPE');
+    Array.from(radiosPublicidad).forEach((r) => {
+      r.addEventListener('change', function () {
+        const seccion = document.getElementById('seccionMediosPublicidad');
+        if (this.value === 'Sí') {
+          seccion.style.display = 'block';
+        } else {
+          seccion.style.display = 'none';
+          document
+            .querySelectorAll('input[name="mediosPublicidadONPE"]:checked')
+            .forEach((ch) => (ch.checked = false));
+        }
+      });
+    });
+
+    const radiosSupoETLV = document.getElementsByName('supoETLV');
+    Array.from(radiosSupoETLV).forEach((r) => {
+      r.addEventListener('change', function () {
+        const seccion = document.getElementById('seccionETLV');
+        const seccionAcceso = document.getElementById('seccionAccesoETLV');
+        if (this.value === 'Sí') {
+          seccion.style.display = 'block';
+        } else {
+          seccion.style.display = 'none';
+          seccionAcceso.style.display = 'none';
+          document
+            .querySelectorAll(
+              'input[name="haAccedidoETLV"]:checked, input[name="haCambiadoLocal"]:checked, input[name="problemasETLV"]:checked'
+            )
+            .forEach((el) => (el.checked = false));
+        }
+      });
+    });
+
+    const radiosHaAccedido = document.getElementsByName('haAccedidoETLV');
+    Array.from(radiosHaAccedido).forEach((r) => {
+      r.addEventListener('change', function () {
+        const seccionAcceso = document.getElementById('seccionAccesoETLV');
+        if (this.value === 'Sí') {
+          seccionAcceso.style.display = 'block';
+        } else {
+          seccionAcceso.style.display = 'none';
+          document
+            .querySelectorAll(
+              'input[name="haCambiadoLocal"]:checked, input[name="problemasETLV"]:checked'
+            )
+            .forEach((el) => (el.checked = false));
+        }
+      });
+    });
+
+    document.getElementById('btnEnviar').addEventListener('click', enviarFormulario);
+  }
+
+  function obtenerValorRadio(nombre) {
+    const seleccionado = document.querySelector(`input[name="${nombre}"]:checked`);
+    return seleccionado ? seleccionado.value : '';
+  }
+
+  function enviarFormulario() {
+    const mensajeDiv = document.getElementById('mensaje');
+    mensajeDiv.textContent = '';
+
+    const grupoEtario = obtenerValorRadio('grupoEtario');
+    const region = document.getElementById('region').value;
+    const provincia = document.getElementById('provincia').value;
+    const distrito = document.getElementById('distrito').value;
+
+    let ubigeo = '-';
+    if (distrito && distritosActuales[distrito]) {
+      ubigeo = distritosActuales[distrito];
+    }
+
+    const publicidadONPE = obtenerValorRadio('publicidadONPE');
+    const mediosPublicidadONPE = Array.from(
+      document.querySelectorAll('input[name="mediosPublicidadONPE"]:checked')
+    ).map((ch) => ch.value);
+
+    const claridadONPE = obtenerValorRadio('claridadONPE');
+    const sabePuedeElegirLocal = obtenerValorRadio('sabePuedeElegirLocal');
+    const supoETLV = obtenerValorRadio('supoETLV');
+    const haAccedidoETLV = obtenerValorRadio('haAccedidoETLV');
+    const haCambiadoLocal = obtenerValorRadio('haCambiadoLocal');
+    const problemasETLV = Array.from(
+      document.querySelectorAll('input[name="problemasETLV"]:checked')
+    ).map((ch) => ch.value);
+
+    if (!grupoEtario) {
+      alert('Por favor, indique su grupo etario.');
+      return;
+    }
+    if (!region || !provincia || !distrito || ubigeo === '-') {
+      alert('Por favor, complete región, provincia y distrito válidos.');
+      return;
+    }
+    if (!publicidadONPE) {
+      alert('Por favor, responda la pregunta sobre publicidad de la ONPE (pregunta 5).');
+      return;
+    }
+    if (publicidadONPE === 'Sí' && mediosPublicidadONPE.length === 0) {
+      alert('Por favor, indique a través de qué medios vio la publicidad (pregunta 6).');
+      return;
+    }
+    if (!claridadONPE) {
+      alert('Por favor, responda la pregunta sobre claridad de las campañas (pregunta 7).');
+      return;
+    }
+    if (!sabePuedeElegirLocal) {
+      alert('Por favor, responda la pregunta 8.');
+      return;
+    }
+    if (!supoETLV) {
+      alert('Por favor, responda la pregunta 9.');
+      return;
+    }
+    if (supoETLV === 'Sí' && !haAccedidoETLV) {
+      alert('Por favor, responda la pregunta 10 sobre si ingresó a la plataforma.');
+      return;
+    }
+    if (supoETLV === 'Sí' && haAccedidoETLV === 'Sí' && !haCambiadoLocal) {
+      alert('Por favor, responda la pregunta 11 sobre si pudo elegir su local exitosamente.');
+      return;
+    }
+    if (supoETLV === 'Sí' && haAccedidoETLV === 'Sí' && problemasETLV.length === 0) {
+      alert(
+        'Por favor, indique si tuvo algún problema al usar la plataforma (pregunta 12).'
+      );
+      return;
+    }
+
+    const formData = {
+      grupoEtario,
+      region,
+      provincia,
+      distrito,
+      ubigeo,
+      publicidadONPE,
+      mediosPublicidadONPE,
+      claridadONPE,
+      sabePuedeElegirLocal,
+      supoETLV,
+      haAccedidoETLV,
+      haCambiadoLocal,
+      problemasETLV
+    };
+
+    document.getElementById('btnEnviar').disabled = true;
+
+    fetch(API_URL, {
+      method: 'POST',
+      mode: 'no-cors',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(formData)
+    })
+      .then(() => {
+        // ✅ Marcamos en este navegador que ya respondió
+        try {
+          localStorage.setItem(STORAGE_KEY, '1');
+        } catch (e) {
+          console.warn('No se pudo guardar en localStorage:', e);
         }
 
-        const url = 'ubigeo/' + encodeURIComponent(region) + '.json';
-
-        fetch(url)
-          .then((r) => {
-            if (!r.ok) throw new Error('No se pudo cargar ' + url);
-            return r.json();
-          })
-          .then((data) => {
-            ubigeoRegionCache[region] = data;
-            popularProvincias(region);
-          })
-          .catch((err) => {
-            console.error('Error cargando JSON de región:', region, err);
-            alert('Ocurrió un problema al cargar los datos de ubicación. Intente nuevamente.');
-          });
-      }
-
-      function popularProvincias(region) {
-        const provinciaSelect = document.getElementById('provincia');
-        const dataRegion = ubigeoRegionCache[region] || {};
-
-        provinciaSelect.innerHTML = '<option value="">-- Seleccione provincia --</option>';
-
-        const provincias = Object.keys(dataRegion).sort((a, b) => a.localeCompare(b, 'es'));
-
-        provincias.forEach((prov) => {
-          const opt = document.createElement('option');
-          opt.value = prov;
-          opt.textContent = prov;
-          provinciaSelect.appendChild(opt);
-        });
-      }
-
-      function cargarDistritos(region, provincia) {
-        const distritoSelect = document.getElementById('distrito');
-        distritoSelect.innerHTML = '<option value="">-- Seleccione distrito --</option>';
-
-        distritoSelect.disabled = !(region && provincia);
-        distritosActuales = {};
-
-        if (!region || !provincia) return;
-
-        const dataRegion = ubigeoRegionCache[region] || {};
-        const dataProvincia = dataRegion[provincia] || {};
-
-        distritosActuales = dataProvincia;
-
-        const distritos = Object.keys(dataProvincia).sort((a, b) =>
-          a.localeCompare(b, 'es')
-        );
-
-        distritos.forEach((dist) => {
-          const opt = document.createElement('option');
-          opt.value = dist;
-          opt.textContent = dist;
-          distritoSelect.appendChild(opt);
-        });
-      }
-
-      function configurarEventosLogica() {
-        document.getElementById('region').addEventListener('change', function () {
-          const region = this.value;
-          cargarProvincias(region);
-        });
-
-        document.getElementById('provincia').addEventListener('change', function () {
-          const region = document.getElementById('region').value;
-          const provincia = this.value;
-          cargarDistritos(region, provincia);
-        });
-
-        const radiosPublicidad = document.getElementsByName('publicidadONPE');
-        Array.from(radiosPublicidad).forEach((r) => {
-          r.addEventListener('change', function () {
-            const seccion = document.getElementById('seccionMediosPublicidad');
-            if (this.value === 'Sí') {
-              seccion.style.display = 'block';
-            } else {
-              seccion.style.display = 'none';
-              document
-                .querySelectorAll('input[name="mediosPublicidadONPE"]:checked')
-                .forEach((ch) => (ch.checked = false));
-            }
-          });
-        });
-
-        const radiosSupoETLV = document.getElementsByName('supoETLV');
-        Array.from(radiosSupoETLV).forEach((r) => {
-          r.addEventListener('change', function () {
-            const seccion = document.getElementById('seccionETLV');
-            const seccionAcceso = document.getElementById('seccionAccesoETLV');
-            if (this.value === 'Sí') {
-              seccion.style.display = 'block';
-            } else {
-              seccion.style.display = 'none';
-              seccionAcceso.style.display = 'none';
-              document
-                .querySelectorAll(
-                  'input[name="haAccedidoETLV"]:checked, input[name="haCambiadoLocal"]:checked, input[name="problemasETLV"]:checked'
-                )
-                .forEach((el) => (el.checked = false));
-            }
-          });
-        });
-
-        const radiosHaAccedido = document.getElementsByName('haAccedidoETLV');
-        Array.from(radiosHaAccedido).forEach((r) => {
-          r.addEventListener('change', function () {
-            const seccionAcceso = document.getElementById('seccionAccesoETLV');
-            if (this.value === 'Sí') {
-              seccionAcceso.style.display = 'block';
-            } else {
-              seccionAcceso.style.display = 'none';
-              document
-                .querySelectorAll(
-                  'input[name="haCambiadoLocal"]:checked, input[name="problemasETLV"]:checked'
-                )
-                .forEach((el) => (el.checked = false));
-            }
-          });
-        });
-
-        document.getElementById('btnEnviar').addEventListener('click', enviarFormulario);
-      }
-
-      function obtenerValorRadio(nombre) {
-        const seleccionado = document.querySelector(`input[name="${nombre}"]:checked`);
-        return seleccionado ? seleccionado.value : '';
-      }
-
-      function enviarFormulario() {
-        const mensajeDiv = document.getElementById('mensaje');
-        mensajeDiv.textContent = '';
-
-        const grupoEtario = obtenerValorRadio('grupoEtario');
-        const region = document.getElementById('region').value;
-        const provincia = document.getElementById('provincia').value;
-        const distrito = document.getElementById('distrito').value;
-
-        let ubigeo = '-';
-        if (distrito && distritosActuales[distrito]) {
-          ubigeo = distritosActuales[distrito];
-        }
-
-        const publicidadONPE = obtenerValorRadio('publicidadONPE');
-        const mediosPublicidadONPE = Array.from(
-          document.querySelectorAll('input[name="mediosPublicidadONPE"]:checked')
-        ).map((ch) => ch.value);
-
-        const claridadONPE = obtenerValorRadio('claridadONPE');
-        const sabePuedeElegirLocal = obtenerValorRadio('sabePuedeElegirLocal');
-        const supoETLV = obtenerValorRadio('supoETLV');
-        const haAccedidoETLV = obtenerValorRadio('haAccedidoETLV');
-        const haCambiadoLocal = obtenerValorRadio('haCambiadoLocal');
-        const problemasETLV = Array.from(
-          document.querySelectorAll('input[name="problemasETLV"]:checked')
-        ).map((ch) => ch.value);
-
-        if (!grupoEtario) {
-          alert('Por favor, indique su grupo etario.');
-          return;
-        }
-        if (!region || !provincia || !distrito || ubigeo === '-') {
-          alert('Por favor, complete región, provincia y distrito válidos.');
-          return;
-        }
-        if (!publicidadONPE) {
-          alert('Por favor, responda la pregunta sobre publicidad de la ONPE (pregunta 5).');
-          return;
-        }
-        if (publicidadONPE === 'Sí' && mediosPublicidadONPE.length === 0) {
-          alert('Por favor, indique a través de qué medios vio la publicidad (pregunta 6).');
-          return;
-        }
-        if (!claridadONPE) {
-          alert('Por favor, responda la pregunta sobre claridad de las campañas (pregunta 7).');
-          return;
-        }
-        if (!sabePuedeElegirLocal) {
-          alert('Por favor, responda la pregunta 8.');
-          return;
-        }
-        if (!supoETLV) {
-          alert('Por favor, responda la pregunta 9.');
-          return;
-        }
-        if (supoETLV === 'Sí' && !haAccedidoETLV) {
-          alert('Por favor, responda la pregunta 10 sobre si ingresó a la plataforma.');
-          return;
-        }
-        if (supoETLV === 'Sí' && haAccedidoETLV === 'Sí' && !haCambiadoLocal) {
-          alert('Por favor, responda la pregunta 11 sobre si pudo elegir su local exitosamente.');
-          return;
-        }
-        if (supoETLV === 'Sí' && haAccedidoETLV === 'Sí' && problemasETLV.length === 0) {
-          alert(
-            'Por favor, indique si tuvo algún problema al usar la plataforma (pregunta 12).'
-          );
-          return;
-        }
-
-        const formData = {
-          grupoEtario,
-          region,
-          provincia,
-          distrito,
-          ubigeo,
-          publicidadONPE,
-          mediosPublicidadONPE,
-          claridadONPE,
-          sabePuedeElegirLocal,
-          supoETLV,
-          haAccedidoETLV,
-          haCambiadoLocal,
-          problemasETLV
-        };
-
-        document.getElementById('btnEnviar').disabled = true;
-
-        fetch(API_URL, {
-          method: 'POST',
-          mode: 'no-cors',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(formData)
-        })
-          .then(() => {
-            document.body.innerHTML = `
-              <div style="max-width:800px;margin:40px auto;font-family:Arial,sans-serif;text-align:center;">
-                <h1 style="color:#003366;">Registro completado</h1>
-                <p>Se ha realizado el registro correctamente. Muchas gracias por su participación.</p>
-              </div>
-            `;
-          })
-          .catch((err) => {
-            console.error(err);
-            mensajeDiv.textContent =
-              'Ocurrió un error al enviar la respuesta. Intente nuevamente.';
-            document.getElementById('btnEnviar').disabled = false;
-          });
-      }
-    </script>
+        // Mensaje final
+        document.body.innerHTML = `
+          <div style="max-width:800px;margin:40px auto;font-family:Arial,sans-serif;text-align:center;">
+            <h1 style="color:#003366;">Registro completado</h1>
+            <p>Se ha realizado el registro correctamente. Muchas gracias por su participación.</p>
+          </div>
+        `;
+      })
+      .catch((err) => {
+        console.error(err);
+        mensajeDiv.textContent =
+          'Ocurrió un error al enviar la respuesta. Intente nuevamente.';
+        document.getElementById('btnEnviar').disabled = false;
+      });
+  }
+  </script>
   </body>
 </html>
