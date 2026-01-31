@@ -193,9 +193,9 @@
          PUBLICIDAD ONPE
          ========================== -->
     <fieldset>
-      <legend>Sobre la publicidad de la ONPE</legend>
+      <legend>Sobre las campañas informativas de la ONPE</legend>
 
-      <label>5. ¿Ha visto publicidad de la ONPE sobre las Elecciones Generales?</label>
+      <label>5. ¿Ha visto alguna campaña informativa de la ONPE sobre las Elecciones Generales?</label>
       <label class="inline-label">
         <input type="radio" name="publicidadONPE" value="Sí" /> Sí
       </label>
@@ -239,25 +239,27 @@
         </label>
       </div>
 
-      <label>
-        7. En una escala del 1 al 5, donde 1 es “Nada claro” y 5 es “Muy claro”,
-        ¿qué tan claro le resultó el mensaje de las campañas publicitarias de la ONPE?
-      </label>
-      <label class="inline-label">
-        <input type="radio" name="claridadONPE" value="1" /> 1 – Nada claro
-      </label>
-      <label class="inline-label">
-        <input type="radio" name="claridadONPE" value="2" /> 2 – Poco claro
-      </label>
-      <label class="inline-label">
-        <input type="radio" name="claridadONPE" value="3" /> 3 – Ni claro ni confuso
-      </label>
-      <label class="inline-label">
-        <input type="radio" name="claridadONPE" value="4" /> 4 – Algo claro
-      </label>
-      <label class="inline-label">
-        <input type="radio" name="claridadONPE" value="5" /> 5 – Muy claro
-      </label>
+<div id="bloqueP7" class="seccion-oculta">
+  <label id="p7">
+    7. En una escala del 1 al 5, donde 1 es “Nada claro” y 5 es “Muy claro”,
+    ¿qué tan claro le resultó el mensaje de las campañas informativas de la ONPE?
+  </label>
+  <label class="inline-label">
+    <input type="radio" name="claridadONPE" value="1" /> 1 – Nada claro
+  </label>
+  <label class="inline-label">
+    <input type="radio" name="claridadONPE" value="2" /> 2 – Poco claro
+  </label>
+  <label class="inline-label">
+    <input type="radio" name="claridadONPE" value="3" /> 3 – Ni claro ni confuso
+  </label>
+  <label class="inline-label">
+    <input type="radio" name="claridadONPE" value="4" /> 4 – Algo claro
+  </label>
+  <label class="inline-label">
+    <input type="radio" name="claridadONPE" value="5" /> 5 – Muy claro
+  </label>
+</div>
     </fieldset>
 
     <!-- ==========================
@@ -374,7 +376,7 @@
     <script>
       // 👉 Pon aquí la URL de TU Web App de Apps Script (la que termina en /exec)
       const API_URL =
-        'https://script.google.com/macros/s/AKfycbwRuJefB-J3wR_J4r_faUUGQW2Q5HoC6QuOPpbFHdyX_CmwDvRdj1AiXLJofQOEVEocjA/exec';
+        'https://script.google.com/macros/s/AKfycbzJRa9CoWFL8Tn06e72rWalbwGZH0YpdJsfsL5LRnp7LQtkm7sLZ24MR_XdiKC6InHtAA/exec';
 
   // Nombres de archivos JSON por región en /ubigeo/
   const REGIONES = [
@@ -534,20 +536,31 @@
       cargarDistritos(region, provincia);
     });
 
-    const radiosPublicidad = document.getElementsByName('publicidadONPE');
-    Array.from(radiosPublicidad).forEach((r) => {
-      r.addEventListener('change', function () {
-        const seccion = document.getElementById('seccionMediosPublicidad');
-        if (this.value === 'Sí') {
-          seccion.style.display = 'block';
-        } else {
-          seccion.style.display = 'none';
-          document
-            .querySelectorAll('input[name="mediosPublicidadONPE"]:checked')
-            .forEach((ch) => (ch.checked = false));
-        }
-      });
-    });
+   const radiosPublicidad = document.getElementsByName('publicidadONPE');
+Array.from(radiosPublicidad).forEach((r) => {
+  r.addEventListener('change', function () {
+    const seccion6 = document.getElementById('seccionMediosPublicidad');
+    const bloque7 = document.getElementById('bloqueP7');
+
+    if (this.value === 'Sí') {
+      seccion6.style.display = 'block';
+      bloque7.style.display = 'block';
+    } else {
+      seccion6.style.display = 'none';
+      bloque7.style.display = 'none';
+
+      // limpiar checks de P6
+      document
+        .querySelectorAll('input[name="mediosPublicidadONPE"]:checked')
+        .forEach((ch) => (ch.checked = false));
+
+      // limpiar radios de P7
+      document
+        .querySelectorAll('input[name="claridadONPE"]:checked')
+        .forEach((r) => (r.checked = false));
+    }
+  });
+});
 
     const radiosSupoETLV = document.getElementsByName('supoETLV');
     Array.from(radiosSupoETLV).forEach((r) => {
@@ -593,128 +606,123 @@
     return seleccionado ? seleccionado.value : '';
   }
 
-function enviarFormulario() {
-    const mensajeDiv = document.getElementById('mensaje');
-    mensajeDiv.textContent = '';
+function genId() {
+  return (window.crypto && crypto.randomUUID)
+    ? crypto.randomUUID()
+    : (Date.now() + '-' + Math.random().toString(16).slice(2));
+}
 
-    const grupoEtario = obtenerValorRadio('grupoEtario');
-    const region = document.getElementById('region').value;
-    const provincia = document.getElementById('provincia').value;
-    const distrito = document.getElementById('distrito').value;
+function sendOnce(payload) {
+  const body = JSON.stringify(payload);
 
-    let ubigeo = '-';
-    if (distrito && distritosActuales[distrito]) {
-      ubigeo = distritosActuales[distrito];
-    }
-
-    const publicidadONPE = obtenerValorRadio('publicidadONPE');
-    const mediosPublicidadONPE = Array.from(
-      document.querySelectorAll('input[name="mediosPublicidadONPE"]:checked')
-    ).map((ch) => ch.value);
-
-    const claridadONPE = obtenerValorRadio('claridadONPE');
-    const sabePuedeElegirLocal = obtenerValorRadio('sabePuedeElegirLocal');
-    const supoETLV = obtenerValorRadio('supoETLV');
-    const haAccedidoETLV = obtenerValorRadio('haAccedidoETLV');
-    const haCambiadoLocal = obtenerValorRadio('haCambiadoLocal');
-    const problemasETLV = Array.from(
-      document.querySelectorAll('input[name="problemasETLV"]:checked')
-    ).map((ch) => ch.value);
-
-    // ====== VALIDACIONES (igual que antes) ======
-    if (!grupoEtario) {
-      alert('Por favor, indique su grupo etario.');
-      return;
-    }
-    if (!region || !provincia || !distrito || ubigeo === '-') {
-      alert('Por favor, complete región, provincia y distrito válidos.');
-      return;
-    }
-    if (!publicidadONPE) {
-      alert('Por favor, responda la pregunta sobre publicidad de la ONPE (pregunta 5).');
-      return;
-    }
-    if (publicidadONPE === 'Sí' && mediosPublicidadONPE.length === 0) {
-      alert('Por favor, indique a través de qué medios vio la publicidad (pregunta 6).');
-      return;
-    }
-    if (!claridadONPE) {
-      alert('Por favor, responda la pregunta sobre claridad de las campañas (pregunta 7).');
-      return;
-    }
-    if (!sabePuedeElegirLocal) {
-      alert('Por favor, responda la pregunta 8.');
-      return;
-    }
-    if (!supoETLV) {
-      alert('Por favor, responda la pregunta 9.');
-      return;
-    }
-    if (supoETLV === 'Sí' && !haAccedidoETLV) {
-      alert('Por favor, responda la pregunta 10 sobre si ingresó a la plataforma.');
-      return;
-    }
-    if (supoETLV === 'Sí' && haAccedidoETLV === 'Sí' && !haCambiadoLocal) {
-      alert('Por favor, responda la pregunta 11 sobre si pudo elegir su local exitosamente.');
-      return;
-    }
-    if (supoETLV === 'Sí' && haAccedidoETLV === 'Sí' && problemasETLV.length === 0) {
-      alert(
-        'Por favor, indique si tuvo algún problema al usar la plataforma (pregunta 12).'
+  // 1) Intento con sendBeacon (más fiable si se cierra la página)
+  if (navigator.sendBeacon) {
+    try {
+      const ok = navigator.sendBeacon(
+        API_URL,
+        new Blob([body], { type: 'text/plain;charset=utf-8' })
       );
-      return;
-    }
-
-    const formData = {
-      grupoEtario,
-      region,
-      provincia,
-      distrito,
-      ubigeo,
-      publicidadONPE,
-      mediosPublicidadONPE,
-      claridadONPE,
-      sabePuedeElegirLocal,
-      supoETLV,
-      haAccedidoETLV,
-      haCambiadoLocal,
-      problemasETLV
-    };
-
-    // Deshabilitar botón para evitar dobles clics
-    const btn = document.getElementById('btnEnviar');
-    if (btn) btn.disabled = true;
-
-    // ✅ 1) Marcamos como respondido en este navegador
-    try {
-      localStorage.setItem(STORAGE_KEY, '1');
-    } catch (e) {
-      console.warn('No se pudo guardar en localStorage:', e);
-    }
-
-    // ✅ 2) Mostramos mensaje final INMEDIATO (sin esperar al servidor)
-    document.body.innerHTML = `
-      <div style="max-width:800px;margin:40px auto;font-family:Arial,sans-serif;text-align:center;">
-        <h1 style="color:#003366;">Registro completado</h1>
-        <p>Se ha realizado el registro correctamente. Muchas gracias por su participación.</p>
-      </div>
-    `;
-
-    // ✅ 3) Enviamos la info "en segundo plano"
-    try {
-      fetch(API_URL, {
-        method: 'POST',
-        mode: 'no-cors',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData)
-      });
-      // No esperamos .then() para no frenar la UX
-    } catch (err) {
-      console.error('Error al enviar datos al servidor:', err);
-      // Si falla de verdad la red, se vería en la consola;
-      // desde el punto de vista del encuestado, ya terminó.
-    }
+      if (ok) return;
+    } catch (_) {}
   }
-  </script>
+
+  // 2) Fallback con fetch (fire & forget)
+  try {
+    fetch(API_URL, {
+      method: 'POST',
+      mode: 'no-cors',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body,
+      keepalive: true
+    });
+  } catch (_) {}
+}
+
+function sendWithInvisibleRetries(payload) {
+  const j1 = Math.floor(Math.random() * 600);
+  const j2 = Math.floor(Math.random() * 1200);
+
+  sendOnce(payload);
+  setTimeout(() => sendOnce(payload), 2000 + j1);
+  setTimeout(() => sendOnce(payload), 8000 + j2);
+
+  window.addEventListener('pagehide', () => sendOnce(payload), { once: true });
+}
+
+function enviarFormulario() {
+  const grupoEtario = obtenerValorRadio('grupoEtario');
+  const region = document.getElementById('region').value;
+  const provincia = document.getElementById('provincia').value;
+  const distrito = document.getElementById('distrito').value;
+
+  let ubigeo = '-';
+  if (distrito && distritosActuales[distrito]) ubigeo = distritosActuales[distrito];
+
+  const publicidadONPE = obtenerValorRadio('publicidadONPE');
+  const mediosPublicidadONPE = Array.from(
+    document.querySelectorAll('input[name="mediosPublicidadONPE"]:checked')
+  ).map((ch) => ch.value);
+
+  const claridadONPE = obtenerValorRadio('claridadONPE');
+  const sabePuedeElegirLocal = obtenerValorRadio('sabePuedeElegirLocal');
+  const supoETLV = obtenerValorRadio('supoETLV');
+  const haAccedidoETLV = obtenerValorRadio('haAccedidoETLV');
+  const haCambiadoLocal = obtenerValorRadio('haCambiadoLocal');
+  const problemasETLV = Array.from(
+    document.querySelectorAll('input[name="problemasETLV"]:checked')
+  ).map((ch) => ch.value);
+
+  // Validaciones
+  if (!grupoEtario) { alert('Por favor, indique su grupo etario.'); return; }
+  if (!region || !provincia || !distrito || ubigeo === '-') { alert('Por favor, complete región, provincia y distrito válidos.'); return; }
+  if (!publicidadONPE) { alert('Por favor, responda la pregunta 5.'); return; }
+  if (publicidadONPE === 'Sí' && mediosPublicidadONPE.length === 0) { alert('Por favor, responda la pregunta 6.'); return; }
+if (publicidadONPE === 'Sí' && !claridadONPE) {
+  alert('Por favor, responda la pregunta 7.');
+  return;
+}  
+  if (!sabePuedeElegirLocal) { alert('Por favor, responda la pregunta 8.'); return; }
+  if (!supoETLV) { alert('Por favor, responda la pregunta 9.'); return; }
+  if (supoETLV === 'Sí' && !haAccedidoETLV) { alert('Por favor, responda la pregunta 10.'); return; }
+  if (supoETLV === 'Sí' && haAccedidoETLV === 'Sí' && !haCambiadoLocal) { alert('Por favor, responda la pregunta 11.'); return; }
+  if (supoETLV === 'Sí' && haAccedidoETLV === 'Sí' && problemasETLV.length === 0) { alert('Por favor, responda la pregunta 12.'); return; }
+
+  const formData = {
+    submissionId: genId(),
+    sentAt: new Date().toISOString(),
+    grupoEtario,
+    region,
+    provincia,
+    distrito,
+    ubigeo,
+    publicidadONPE,
+    mediosPublicidadONPE,
+    claridadONPE,
+    sabePuedeElegirLocal,
+    supoETLV,
+    haAccedidoETLV,
+    haCambiadoLocal,
+    problemasETLV
+  };
+
+  // Deshabilitar botón para evitar dobles clics
+  const btn = document.getElementById('btnEnviar');
+  if (btn) btn.disabled = true;
+
+  // 1) Enviar (best-effort, con reintentos silenciosos)
+  sendWithInvisibleRetries(formData);
+
+  // 2) Marcar respondido en este navegador (después de disparar el envío)
+  try { localStorage.setItem(STORAGE_KEY, '1'); } catch (_) {}
+
+  // 3) Mensaje final inmediato
+  document.body.innerHTML = `
+    <div style="max-width:800px;margin:40px auto;font-family:Arial,sans-serif;text-align:center;">
+      <h1 style="color:#003366;">Registro completado</h1>
+      <p>Se ha realizado el registro correctamente. Muchas gracias por su participación.</p>
+    </div>
+  `;
+}
+</script>
   </body>
 </html>
