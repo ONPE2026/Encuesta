@@ -265,6 +265,7 @@
     <!-- ==========================
          SECCIÓN ETLV
          ========================== -->
+  <div id="bloqueETLV" class="seccion-oculta">
     <fieldset>
       <legend>Sobre el local de votación y la plataforma “Elige tu Local de Votación”</legend>
 
@@ -369,6 +370,7 @@
         </div>
       </div>
     </fieldset>
+  </div>
 
     <button id="btnEnviar" class="boton">Enviar</button>
     <div id="mensaje" class="mensaje"></div>
@@ -535,82 +537,130 @@ function cargarProvincias(region) {
     });
   }
 
-  function configurarEventosLogica() {
-    document.getElementById('region').addEventListener('change', function () {
-      const region = this.value;
-      cargarProvincias(region);
-    });
+function configurarEventosLogica() {
 
-    document.getElementById('provincia').addEventListener('change', function () {
-      const region = document.getElementById('region').value;
-      const provincia = this.value;
-      cargarDistritos(region, provincia);
-    });
+  // ==========================
+  // REGIÓN → controla provincias + ETLV
+  // ==========================
+  document.getElementById('region').addEventListener('change', function () {
+    const region = this.value;
+    cargarProvincias(region);
 
-   const radiosPublicidad = document.getElementsByName('publicidadONPE');
-Array.from(radiosPublicidad).forEach((r) => {
-  r.addEventListener('change', function () {
-    const seccion6 = document.getElementById('seccionMediosPublicidad');
-    const bloque7 = document.getElementById('bloqueP7');
+    const bloqueETLV = document.getElementById('bloqueETLV');
+    const seccionETLV = document.getElementById('seccionETLV');
+    const seccionAccesoETLV = document.getElementById('seccionAccesoETLV');
 
-    if (this.value === 'Sí') {
-      seccion6.style.display = 'block';
-      bloque7.style.display = 'block';
+    if (region && region !== 'EXTRANJERO') {
+      bloqueETLV.style.display = 'block';
     } else {
-      seccion6.style.display = 'none';
-      bloque7.style.display = 'none';
+      bloqueETLV.style.display = 'none';
+      seccionETLV.style.display = 'none';
+      seccionAccesoETLV.style.display = 'none';
 
-      // limpiar checks de P6
+      // limpiar todo ETLV
       document
-        .querySelectorAll('input[name="mediosPublicidadONPE"]:checked')
-        .forEach((ch) => (ch.checked = false));
-
-      // limpiar radios de P7
-      document
-        .querySelectorAll('input[name="claridadONPE"]:checked')
-        .forEach((r) => (r.checked = false));
+        .querySelectorAll(
+          'input[name="sabePuedeElegirLocal"]:checked, ' +
+          'input[name="supoETLV"]:checked, ' +
+          'input[name="haAccedidoETLV"]:checked, ' +
+          'input[name="haCambiadoLocal"]:checked, ' +
+          'input[name="problemasETLV"]:checked'
+        )
+        .forEach((el) => (el.checked = false));
     }
   });
-});
 
-    const radiosSupoETLV = document.getElementsByName('supoETLV');
-    Array.from(radiosSupoETLV).forEach((r) => {
-      r.addEventListener('change', function () {
-        const seccion = document.getElementById('seccionETLV');
-        const seccionAcceso = document.getElementById('seccionAccesoETLV');
-        if (this.value === 'Sí') {
-          seccion.style.display = 'block';
-        } else {
-          seccion.style.display = 'none';
-          seccionAcceso.style.display = 'none';
-          document
-            .querySelectorAll(
-              'input[name="haAccedidoETLV"]:checked, input[name="haCambiadoLocal"]:checked, input[name="problemasETLV"]:checked'
-            )
-            .forEach((el) => (el.checked = false));
-        }
-      });
+  // ==========================
+  // PROVINCIA → distritos
+  // ==========================
+  document.getElementById('provincia').addEventListener('change', function () {
+    const region = document.getElementById('region').value;
+    const provincia = this.value;
+    cargarDistritos(region, provincia);
+  });
+
+  // ==========================
+  // P5 → P6 + P7
+  // ==========================
+  const radiosPublicidad = document.getElementsByName('publicidadONPE');
+  Array.from(radiosPublicidad).forEach((r) => {
+    r.addEventListener('change', function () {
+      const seccion6 = document.getElementById('seccionMediosPublicidad');
+      const bloque7 = document.getElementById('bloqueP7');
+
+      if (this.value === 'Sí') {
+        seccion6.style.display = 'block';
+        bloque7.style.display = 'block';
+      } else {
+        seccion6.style.display = 'none';
+        bloque7.style.display = 'none';
+
+        document
+          .querySelectorAll('input[name="mediosPublicidadONPE"]:checked')
+          .forEach((ch) => (ch.checked = false));
+
+        document
+          .querySelectorAll('input[name="claridadONPE"]:checked')
+          .forEach((r) => (r.checked = false));
+      }
     });
+  });
 
-    const radiosHaAccedido = document.getElementsByName('haAccedidoETLV');
-    Array.from(radiosHaAccedido).forEach((r) => {
-      r.addEventListener('change', function () {
-        const seccionAcceso = document.getElementById('seccionAccesoETLV');
-        if (this.value === 'Sí') {
-          seccionAcceso.style.display = 'block';
-        } else {
-          seccionAcceso.style.display = 'none';
-          document
-            .querySelectorAll(
-              'input[name="haCambiadoLocal"]:checked, input[name="problemasETLV"]:checked'
-            )
-            .forEach((el) => (el.checked = false));
-        }
-      });
+  // ==========================
+  // P9 → P10
+  // ==========================
+  const radiosSupoETLV = document.getElementsByName('supoETLV');
+  Array.from(radiosSupoETLV).forEach((r) => {
+    r.addEventListener('change', function () {
+      const seccion = document.getElementById('seccionETLV');
+      const seccionAcceso = document.getElementById('seccionAccesoETLV');
+
+      if (this.value === 'Sí') {
+        seccion.style.display = 'block';
+      } else {
+        seccion.style.display = 'none';
+        seccionAcceso.style.display = 'none';
+
+        document
+          .querySelectorAll(
+            'input[name="haAccedidoETLV"]:checked, ' +
+            'input[name="haCambiadoLocal"]:checked, ' +
+            'input[name="problemasETLV"]:checked'
+          )
+          .forEach((el) => (el.checked = false));
+      }
     });
+  });
 
-    document.getElementById('btnEnviar').addEventListener('click', enviarFormulario);
-  }
+  // ==========================
+  // P10 → P11 + P12
+  // ==========================
+  const radiosHaAccedido = document.getElementsByName('haAccedidoETLV');
+  Array.from(radiosHaAccedido).forEach((r) => {
+    r.addEventListener('change', function () {
+      const seccionAcceso = document.getElementById('seccionAccesoETLV');
+
+      if (this.value === 'Sí') {
+        seccionAcceso.style.display = 'block';
+      } else {
+        seccionAcceso.style.display = 'none';
+
+        document
+          .querySelectorAll(
+            'input[name="haCambiadoLocal"]:checked, ' +
+            'input[name="problemasETLV"]:checked'
+          )
+          .forEach((el) => (el.checked = false));
+      }
+    });
+  });
+
+  // ==========================
+  // ENVIAR
+  // ==========================
+  document.getElementById('btnEnviar').addEventListener('click', enviarFormulario);
+}
+
 
   function obtenerValorRadio(nombre) {
     const seleccionado = document.querySelector(`input[name="${nombre}"]:checked`);
@@ -663,13 +713,13 @@ function sendWithInvisibleRetries(payload) {
 function enviarFormulario() {
   const grupoEtario = obtenerValorRadio('grupoEtario');
   const region = document.getElementById('region').value;
-  let provincia = document.getElementById('provincia').value; // 👈 let
-  let distrito = document.getElementById('distrito').value;   // 👈 let
+  let provincia = document.getElementById('provincia').value;
+  let distrito  = document.getElementById('distrito').value;
   
   let ubigeo = '-';
   
   if (region === 'EXTRANJERO') {
-    // 🌎 Forzamos estos valores cuando vive en el extranjero
+    // 🌎 Extranjero: forzamos valores neutros
     provincia = '-';
     distrito  = '-';
     ubigeo    = '-';
@@ -678,6 +728,7 @@ function enviarFormulario() {
       ubigeo = distritosActuales[distrito];
     }
   }
+
   const publicidadONPE = obtenerValorRadio('publicidadONPE');
   const mediosPublicidadONPE = Array.from(
     document.querySelectorAll('input[name="mediosPublicidadONPE"]:checked')
@@ -692,8 +743,11 @@ function enviarFormulario() {
     document.querySelectorAll('input[name="problemasETLV"]:checked')
   ).map((ch) => ch.value);
 
-  // Validaciones
-if (!grupoEtario) {
+  // ==========================
+  // VALIDACIONES
+  // ==========================
+
+  if (!grupoEtario) {
     alert('Por favor, indique su grupo etario.');
     return;
   }
@@ -724,29 +778,32 @@ if (!grupoEtario) {
     return;
   }
 
-  if (!sabePuedeElegirLocal) {
-    alert('Por favor, responda la pregunta 8.');
-    return;
-  }
+  // 👇 Solo validamos P8–P12 si NO es extranjero
+  if (region !== 'EXTRANJERO') {
+    if (!sabePuedeElegirLocal) {
+      alert('Por favor, responda la pregunta 8.');
+      return;
+    }
 
-  if (!supoETLV) {
-    alert('Por favor, responda la pregunta 9.');
-    return;
-  }
+    if (!supoETLV) {
+      alert('Por favor, responda la pregunta 9.');
+      return;
+    }
 
-  if (supoETLV === 'Sí' && !haAccedidoETLV) {
-    alert('Por favor, responda la pregunta 10.');
-    return;
-  }
+    if (supoETLV === 'Sí' && !haAccedidoETLV) {
+      alert('Por favor, responda la pregunta 10.');
+      return;
+    }
 
-  if (supoETLV === 'Sí' && haAccedidoETLV === 'Sí' && !haCambiadoLocal) {
-    alert('Por favor, responda la pregunta 11.');
-    return;
-  }
+    if (supoETLV === 'Sí' && haAccedidoETLV === 'Sí' && !haCambiadoLocal) {
+      alert('Por favor, responda la pregunta 11.');
+      return;
+    }
 
-  if (supoETLV === 'Sí' && haAccedidoETLV === 'Sí' && problemasETLV.length === 0) {
-    alert('Por favor, responda la pregunta 12.');
-    return;
+    if (supoETLV === 'Sí' && haAccedidoETLV === 'Sí' && problemasETLV.length === 0) {
+      alert('Por favor, responda la pregunta 12.');
+      return;
+    }
   }
 
   const formData = {
@@ -767,17 +824,13 @@ if (!grupoEtario) {
     problemasETLV
   };
 
-  // Deshabilitar botón para evitar dobles clics
   const btn = document.getElementById('btnEnviar');
   if (btn) btn.disabled = true;
 
-  // 1) Enviar (best-effort, con reintentos silenciosos)
   sendWithInvisibleRetries(formData);
 
-  // 2) Marcar respondido en este navegador (después de disparar el envío)
   try { localStorage.setItem(STORAGE_KEY, '1'); } catch (_) {}
 
-  // 3) Mensaje final inmediato
   document.body.innerHTML = `
     <div style="max-width:800px;margin:40px auto;font-family:Arial,sans-serif;text-align:center;">
       <h1 style="color:#003366;">Registro completado</h1>
