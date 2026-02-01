@@ -404,7 +404,8 @@
     'SAN MARTIN',
     'TACNA',
     'TUMBES',
-    'UCAYALI'
+    'UCAYALI',
+    'EXTRANJERO'
   ];
 
   const ubigeoRegionCache = {};
@@ -447,40 +448,50 @@
     });
   }
 
-  function cargarProvincias(region) {
-    const provinciaSelect = document.getElementById('provincia');
-    const distritoSelect = document.getElementById('distrito');
+function cargarProvincias(region) {
+  const provinciaSelect = document.getElementById('provincia');
+  const distritoSelect = document.getElementById('distrito');
 
-    provinciaSelect.innerHTML = '<option value="">-- Seleccione provincia --</option>';
-    distritoSelect.innerHTML = '<option value="">-- Seleccione distrito --</option>';
+  provinciaSelect.innerHTML = '<option value="">-- Seleccione provincia --</option>';
+  distritoSelect.innerHTML = '<option value="">-- Seleccione distrito --</option>';
 
-    provinciaSelect.disabled = !region;
+  provinciaSelect.disabled = !region;
+  distritoSelect.disabled = true;
+  distritosActuales = {};
+
+  if (!region) return;
+
+  // 🛫 Caso especial: EXTRANJERO
+  if (region === 'EXTRANJERO') {
+    provinciaSelect.innerHTML = '<option value="-">-- No aplica (extranjero) --</option>';
+    distritoSelect.innerHTML = '<option value="-">-- No aplica (extranjero) --</option>';
+    provinciaSelect.disabled = true;
     distritoSelect.disabled = true;
     distritosActuales = {};
-
-    if (!region) return;
-
-    if (ubigeoRegionCache[region]) {
-      popularProvincias(region);
-      return;
-    }
-
-    const url = 'ubigeo/' + encodeURIComponent(region) + '.json';
-
-    fetch(url)
-      .then((r) => {
-        if (!r.ok) throw new Error('No se pudo cargar ' + url);
-        return r.json();
-      })
-      .then((data) => {
-        ubigeoRegionCache[region] = data;
-        popularProvincias(region);
-      })
-      .catch((err) => {
-        console.error('Error cargando JSON de región:', region, err);
-        alert('Ocurrió un problema al cargar los datos de ubicación. Intente nuevamente.');
-      });
+    return; // 👈 no intentamos cargar JSON de ubigeo
   }
+
+  if (ubigeoRegionCache[region]) {
+    popularProvincias(region);
+    return;
+  }
+
+  const url = 'ubigeo/' + encodeURIComponent(region) + '.json';
+
+  fetch(url)
+    .then((r) => {
+      if (!r.ok) throw new Error('No se pudo cargar ' + url);
+      return r.json();
+    })
+    .then((data) => {
+      ubigeoRegionCache[region] = data;
+      popularProvincias(region);
+    })
+    .catch((err) => {
+      console.error('Error cargando JSON de región:', region, err);
+      alert('Ocurrió un problema al cargar los datos de ubicación. Intente nuevamente.');
+    });
+}
 
   function popularProvincias(region) {
     const provinciaSelect = document.getElementById('provincia');
@@ -652,12 +663,21 @@ function sendWithInvisibleRetries(payload) {
 function enviarFormulario() {
   const grupoEtario = obtenerValorRadio('grupoEtario');
   const region = document.getElementById('region').value;
-  const provincia = document.getElementById('provincia').value;
-  const distrito = document.getElementById('distrito').value;
-
+  let provincia = document.getElementById('provincia').value; // 👈 let
+  let distrito = document.getElementById('distrito').value;   // 👈 let
+  
   let ubigeo = '-';
-  if (distrito && distritosActuales[distrito]) ubigeo = distritosActuales[distrito];
-
+  
+  if (region === 'EXTRANJERO') {
+    // 🌎 Forzamos estos valores cuando vive en el extranjero
+    provincia = '-';
+    distrito  = '-';
+    ubigeo    = '-';
+  } else {
+    if (distrito && distritosActuales[distrito]) {
+      ubigeo = distritosActuales[distrito];
+    }
+  }
   const publicidadONPE = obtenerValorRadio('publicidadONPE');
   const mediosPublicidadONPE = Array.from(
     document.querySelectorAll('input[name="mediosPublicidadONPE"]:checked')
@@ -673,19 +693,61 @@ function enviarFormulario() {
   ).map((ch) => ch.value);
 
   // Validaciones
-  if (!grupoEtario) { alert('Por favor, indique su grupo etario.'); return; }
-  if (!region || !provincia || !distrito || ubigeo === '-') { alert('Por favor, complete región, provincia y distrito válidos.'); return; }
-  if (!publicidadONPE) { alert('Por favor, responda la pregunta 5.'); return; }
-  if (publicidadONPE === 'Sí' && mediosPublicidadONPE.length === 0) { alert('Por favor, responda la pregunta 6.'); return; }
-if (publicidadONPE === 'Sí' && !claridadONPE) {
-  alert('Por favor, responda la pregunta 7.');
-  return;
-}  
-  if (!sabePuedeElegirLocal) { alert('Por favor, responda la pregunta 8.'); return; }
-  if (!supoETLV) { alert('Por favor, responda la pregunta 9.'); return; }
-  if (supoETLV === 'Sí' && !haAccedidoETLV) { alert('Por favor, responda la pregunta 10.'); return; }
-  if (supoETLV === 'Sí' && haAccedidoETLV === 'Sí' && !haCambiadoLocal) { alert('Por favor, responda la pregunta 11.'); return; }
-  if (supoETLV === 'Sí' && haAccedidoETLV === 'Sí' && problemasETLV.length === 0) { alert('Por favor, responda la pregunta 12.'); return; }
+if (!grupoEtario) {
+    alert('Por favor, indique su grupo etario.');
+    return;
+  }
+
+  if (!region) {
+    alert('Por favor, complete región de residencia.');
+    return;
+  }
+
+  // Solo exigimos provincia/distrito/ubigeo si NO es extranjero
+  if (region !== 'EXTRANJERO' && (!provincia || !distrito || ubigeo === '-')) {
+    alert('Por favor, complete provincia y distrito válidos.');
+    return;
+  }
+
+  if (!publicidadONPE) {
+    alert('Por favor, responda la pregunta 5.');
+    return;
+  }
+
+  if (publicidadONPE === 'Sí' && mediosPublicidadONPE.length === 0) {
+    alert('Por favor, responda la pregunta 6.');
+    return;
+  }
+
+  if (publicidadONPE === 'Sí' && !claridadONPE) {
+    alert('Por favor, responda la pregunta 7.');
+    return;
+  }
+
+  if (!sabePuedeElegirLocal) {
+    alert('Por favor, responda la pregunta 8.');
+    return;
+  }
+
+  if (!supoETLV) {
+    alert('Por favor, responda la pregunta 9.');
+    return;
+  }
+
+  if (supoETLV === 'Sí' && !haAccedidoETLV) {
+    alert('Por favor, responda la pregunta 10.');
+    return;
+  }
+
+  if (supoETLV === 'Sí' && haAccedidoETLV === 'Sí' && !haCambiadoLocal) {
+    alert('Por favor, responda la pregunta 11.');
+    return;
+  }
+
+  if (supoETLV === 'Sí' && haAccedidoETLV === 'Sí' && problemasETLV.length === 0) {
+    alert('Por favor, responda la pregunta 12.');
+    return;
+  }
 
   const formData = {
     submissionId: genId(),
@@ -724,5 +786,5 @@ if (publicidadONPE === 'Sí' && !claridadONPE) {
   `;
 }
 </script>
-  </body>
+</body>
 </html>
