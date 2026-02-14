@@ -415,28 +415,77 @@
 
   // 🔑 Clave en localStorage para marcar que ya respondió
   const STORAGE_KEY = 'encuesta_eg2026_respondida_v3';
+const CIERRE_KEY = 20260213235959; // AAAAMMDDHHMMSS
 
-  window.onload = function () {
-    // ✅ Si ya respondió en este navegador, solo mostramos el mensaje final
-    try {
-      if (localStorage.getItem(STORAGE_KEY) === '1') {
-        document.body.innerHTML = `
-          <div style="max-width:800px;margin:40px auto;font-family:Arial,sans-serif;text-align:center;">
-            <h1 style="color:#003366;">Registro ya realizado</h1>
-            <p>Ya se ha registrado una respuesta desde este navegador. Muchas gracias por su participación.</p>
-          </div>
-        `;
-        return; // No cargamos el formulario ni eventos
-      }
-    } catch (e) {
-      console.warn('No se pudo acceder a localStorage:', e);
-      // Si falla localStorage, seguimos normal (sin bloqueo)
+function limaKey(d = new Date()) {
+  const parts = new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'America/Lima',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+    hour12: false
+  })
+    .formatToParts(d)
+    .reduce((acc, p) => {
+      if (p.type !== 'literal') acc[p.type] = p.value;
+      return acc;
+    }, {});
+
+  return Number(
+    `${parts.year}${parts.month}${parts.day}${parts.hour}${parts.minute}${parts.second}`
+  );
+}
+
+function mostrarEncuestaCerrada() {
+  document.body.innerHTML = `
+    <div style="max-width:800px;margin:40px auto;font-family:Arial,sans-serif;text-align:center;">
+      <h1 style="color:#003366;">Encuesta finalizada</h1>
+      <p>Agradecemos tu interés por responder la encuesta, pero ya no se aceptan más registros.</p>
+    </div>
+  `;
+}
+
+function encuestaEstaCerrada() {
+  return limaKey() >= CIERRE_KEY;
+}
+      
+window.onload = function () {
+
+  // 🚫 Si ya cerró (hora Perú), mostramos mensaje y no cargamos nada más
+  if (encuestaEstaCerrada()) {
+    mostrarEncuestaCerrada();
+    return;
+  }
+
+  // ✅ Si ya respondió en este navegador, solo mostramos el mensaje final
+  try {
+    if (localStorage.getItem(STORAGE_KEY) === '1') {
+      document.body.innerHTML = `
+        <div style="max-width:800px;margin:40px auto;font-family:Arial,sans-serif;text-align:center;">
+          <h1 style="color:#003366;">Registro ya realizado</h1>
+          <p>Ya se ha registrado una respuesta desde este navegador. Muchas gracias por su participación.</p>
+        </div>
+      `;
+      return;
     }
+  } catch (e) {
+    console.warn('No se pudo acceder a localStorage:', e);
+  }
 
-    // Si NO ha respondido, cargamos formulario normalmente
-    cargarRegiones();
-    configurarEventosLogica();
-  };
+  cargarRegiones();
+  configurarEventosLogica();
+
+  // 🕒 Si alguien deja la página abierta, revisamos cada 30s y cerramos sin recargar
+  const t = setInterval(() => {
+    if (encuestaEstaCerrada()) {
+      clearInterval(t);
+      mostrarEncuestaCerrada();
+    }
+  }, 30000);
+};
 
   function cargarRegiones() {
     const regionSelect = document.getElementById('region');
@@ -711,6 +760,10 @@ function sendWithInvisibleRetries(payload) {
 }
 
 function enviarFormulario() {
+   if (encuestaEstaCerrada()) {
+    mostrarEncuestaCerrada();
+    return;
+  }
   const grupoEtario = obtenerValorRadio('grupoEtario');
   const region = document.getElementById('region').value;
   let provincia = document.getElementById('provincia').value;
